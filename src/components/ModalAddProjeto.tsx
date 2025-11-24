@@ -5,26 +5,19 @@ import { useState } from "react";
 interface ModalAddProjetoProps {
   aberto: boolean;
   onClose: () => void;
-  onSalvar: (projeto: {
-    titulo: string;
-    descricao: string;
-    tecnologias: string;
-    github: string;
-    imagem: string | null;
-    descricaoDetalhada: string;
-  }) => void;
 }
 
 export default function ModalAddProjeto({
   aberto,
   onClose,
-  onSalvar
 }: ModalAddProjetoProps) {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [tecnologias, setTecnologias] = useState("");
   const [github, setGithub] = useState("");
   const [imagem, setImagem] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(false);
 
   function handleImagem(e: any) {
     const file = e.target.files?.[0];
@@ -33,6 +26,34 @@ export default function ModalAddProjeto({
     const reader = new FileReader();
     reader.onload = () => setImagem(reader.result as string);
     reader.readAsDataURL(file);
+  }
+
+  async function salvarProjeto() {
+    setLoading(true);
+
+    const body = {
+      titulo,
+      descricao,
+      descricao_detalhada: "",
+      tecnologias,
+      github,
+      imagem: imagem || "",
+    };
+
+    const res = await fetch("/api/projetos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    setLoading(false);
+
+    if (res.ok) {
+      onClose();
+      window.location.reload(); // recarrega o dashboard
+    } else {
+      alert("Erro ao salvar projeto.");
+    }
   }
 
   if (!aberto) return null;
@@ -103,17 +124,16 @@ export default function ModalAddProjeto({
           />
         </label>
 
-        {/* BOTÕES */}
+        {/* BOTÃO SALVAR */}
         <button
-          onClick={() => {
-            onSalvar({ titulo, descricao, tecnologias, github, imagem, descricaoDetalhada: "" });
-            onClose();
-          }}
-          className="w-full py-2 bg-[#B5B6B8] text-black rounded-xl hover:bg-gray-300 transition"
+          onClick={salvarProjeto}
+          disabled={loading}
+          className="w-full py-2 bg-[#B5B6B8] text-black rounded-xl hover:bg-gray-300 transition disabled:opacity-50"
         >
-          Salvar
+          {loading ? "Salvando..." : "Salvar"}
         </button>
 
+        {/* CANCELAR */}
         <button
           onClick={onClose}
           className="text-sm text-white hover:underline mx-auto"

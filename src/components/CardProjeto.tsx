@@ -5,6 +5,7 @@ import Image from "next/image";
 import ModalEditarGeral from "./ModalEditarGeral";
 
 interface CardProjetoProps {
+  id: number;
   tipo: "projeto" | "curso" | "experiencia";
   titulo: string;
   descricao: string;
@@ -19,6 +20,7 @@ interface CardProjetoProps {
 }
 
 export default function CardProjeto({
+  id,
   tipo,
   titulo,
   descricao,
@@ -29,7 +31,7 @@ export default function CardProjeto({
   const [aberto, setAberto] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
 
-  // CAMPOS editáveis
+  // Estado local que aparece no card
   const [tituloEdit, setTituloEdit] = useState(titulo);
   const [descEdit, setDescEdit] = useState(descricao);
   const [imgEdit, setImgEdit] = useState(imagem || "");
@@ -42,15 +44,46 @@ export default function CardProjeto({
     extras.descricaoDetalhada || ""
   );
 
-  function salvarEdicao(val: any) {
+  // ============================
+  //   PUT NO BANCO
+  // ============================
+  async function salvarEdicaoMySQL(val: any) {
+    let rota = "";
+
+    if (tipo === "projeto") rota = `/api/projetos/${id}`;
+    if (tipo === "curso") rota = `/api/formacoes/${id}`;
+    if (tipo === "experiencia") rota = `/api/experiencias/${id}`;
+
+    // Agora usando os nomes CORRETOS que vêm do modal
+    const body = {
+      titulo: val.titulo,
+      descricao: val.descricao,                    // CERTO
+      descricao_detalhada: val.descricao_detalhada, // CERTO
+      tecnologias: val.tecnologias,
+      github: val.github,
+      imagem: val.imagem
+    };
+
+    await fetch(rota, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    // Atualizar frontend
     setTituloEdit(val.titulo);
-    setDescEdit(val.descricaoCurta);
-    setDetalhadaEdit(val.descricaoDetalhada);
+    setDescEdit(val.descricao);
+    setDetalhadaEdit(val.descricao_detalhada);
     setTecEdit(val.tecnologias);
-    setTempoEdit(val.tempo);
     setGithubEdit(val.github);
-    setCertEdit(val.certificado);
     setImgEdit(val.imagem);
+
+    if (tipo !== "projeto") {
+      setTempoEdit(val.tempo || "");
+      setCertEdit(val.certificado || "");
+    }
+
+    setModalAberto(false);
   }
 
   return (
@@ -61,6 +94,7 @@ export default function CardProjeto({
         onClick={() => setAberto(!aberto)}
         className="bg-[#B5B6B8] w-full p-5 rounded-3xl flex items-center gap-4 text-left hover:scale-[1.01] transition"
       >
+
         {/* IMAGEM */}
         <div className="w-16 h-16 rounded-2xl bg-[#0D171A] overflow-hidden">
           {imgEdit && (
@@ -87,49 +121,32 @@ export default function CardProjeto({
       {aberto && (
         <div className="bg-[#B5B6B8] w-full p-5 rounded-3xl text-black flex flex-col gap-2">
 
-          {/* TECNOLOGIAS — APENAS PROJETOS */}
           {tipo === "projeto" && tecEdit && (
-            <p>
-              <span className="font-semibold">Tecnologias:</span> {tecEdit}
-            </p>
+            <p><span className="font-semibold">Tecnologias:</span> {tecEdit}</p>
           )}
 
-          {/* TEMPO — APENAS CURSOS e EXPERIÊNCIAS */}
           {(tipo === "curso" || tipo === "experiencia") && tempoEdit && (
-            <p>
-              <span className="font-semibold">Tempo:</span> {tempoEdit}
-            </p>
+            <p><span className="font-semibold">Tempo:</span> {tempoEdit}</p>
           )}
 
-          {/* GITHUB — APENAS PROJETOS */}
           {tipo === "projeto" && githubEdit && (
             <p>
               <span className="font-semibold">GitHub:</span>{" "}
-              <a
-                href={githubEdit}
-                target="_blank"
-                className="underline text-blue-700"
-              >
+              <a href={githubEdit} target="_blank" className="underline text-blue-700">
                 Abrir link
               </a>
             </p>
           )}
 
-          {/* CERTIFICADO — APENAS CURSOS */}
           {tipo === "curso" && certEdit && (
             <p>
               <span className="font-semibold">Certificado:</span>{" "}
-              <a
-                href={certEdit}
-                download
-                className="underline text-blue-700"
-              >
+              <a href={certEdit} download className="underline text-blue-700">
                 Baixar arquivo
               </a>
             </p>
           )}
 
-          {/* DESCRIÇÃO DETALHADA */}
           {detalhadaEdit && (
             <p className="whitespace-pre-line">
               <span className="font-semibold">Descrição detalhada:</span>{" "}
@@ -149,7 +166,7 @@ export default function CardProjeto({
         </div>
       )}
 
-      {/* MODAL DE EDIÇÃO */}
+      {/* MODAL */}
       <ModalEditarGeral
         aberto={modalAberto}
         onClose={() => setModalAberto(false)}
@@ -162,7 +179,8 @@ export default function CardProjeto({
         github={githubEdit}
         certificado={certEdit}
         imagem={imgEdit}
-        onSalvar={salvarEdicao}
+        id={id}
+        onSalvar={salvarEdicaoMySQL}
       />
     </div>
   );

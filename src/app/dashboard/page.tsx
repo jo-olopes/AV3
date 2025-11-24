@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import CardProjeto from "@/components/CardProjeto";
 import ModalAdicionar from "@/components/ModalAdicionar";
@@ -35,6 +35,57 @@ export default function DashboardPage() {
     setCargo(novoCargo);
     setDescricao(novaDescricao);
   }
+
+  // ============================
+  //   GET — Carregar projetos
+  // ============================
+  useEffect(() => {
+    async function carregarProjetos() {
+      try {
+        const res = await fetch("/api/projetos");
+        const data = await res.json();
+        setProjetos(data);
+      } catch (err) {
+        console.log("Erro ao carregar projetos:", err);
+      }
+    }
+
+    carregarProjetos();
+  }, []);
+
+  // ============================
+  //   GET — Carregar formações
+  // ============================
+  useEffect(() => {
+    async function carregarFormacoes() {
+      try {
+        const res = await fetch("/api/formacoes");
+        const data = await res.json();
+        setFormacoes(data);
+      } catch (err) {
+        console.log("Erro ao carregar formacoes:", err);
+      }
+    }
+
+    carregarFormacoes();
+  }, []);
+
+  // ============================
+  //   GET — Carregar experiências
+  // ============================
+  useEffect(() => {
+    async function carregarExperiencias() {
+      try {
+        const res = await fetch("/api/experiencias");
+        const data = await res.json();
+        setExperiencias(data);
+      } catch (err) {
+        console.log("Erro ao carregar experiencias:", err);
+      }
+    }
+
+    carregarExperiencias();
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#52555A] p-6 flex flex-col items-center">
@@ -78,9 +129,10 @@ export default function DashboardPage() {
       <h2 className="text-white text-lg font-semibold w-full max-w-2xl mb-4">Projetos</h2>
 
       <div className="w-full max-w-2xl flex flex-col gap-6">
-        {projetos.map((p, i) => (
+        {projetos.map((p) => (
           <CardProjeto
-            key={i}
+            key={p.id}
+            id={p.id}
             tipo="projeto"
             titulo={p.titulo}
             descricao={p.descricao}
@@ -88,7 +140,7 @@ export default function DashboardPage() {
             extras={{
               tecnologias: p.tecnologias,
               github: p.github,
-              descricaoDetalhada: p.descricaoDetalhada
+              descricaoDetalhada: p.descricao_detalhada
             }}
           />
         ))}
@@ -100,9 +152,10 @@ export default function DashboardPage() {
       </h2>
 
       <div className="w-full max-w-2xl flex flex-col gap-6">
-        {formacoes.map((f, i) => (
+        {formacoes.map((f) => (
           <CardProjeto
-            key={i}
+            key={f.id}
+            id={f.id}
             tipo="curso"
             titulo={f.titulo}
             descricao={f.descricao}
@@ -110,7 +163,7 @@ export default function DashboardPage() {
             extras={{
               tempo: f.tempo,
               certificado: f.certificado,
-              descricaoDetalhada: f.descricaoDetalhada
+              descricaoDetalhada: f.descricao_detalhada
             }}
           />
         ))}
@@ -122,16 +175,17 @@ export default function DashboardPage() {
       </h2>
 
       <div className="w-full max-w-2xl flex flex-col gap-6">
-        {experiencias.map((e, i) => (
+        {experiencias.map((e) => (
           <CardProjeto
-            key={i}
+            key={e.id}
+            id={e.id}
             tipo="experiencia"
             titulo={e.titulo}
             descricao={e.descricao}
             imagem={e.imagem}
             extras={{
               tempo: e.tempo,
-              descricaoDetalhada: e.descricaoDetalhada
+              descricaoDetalhada: e.descricao_detalhada
             }}
           />
         ))}
@@ -166,25 +220,16 @@ export default function DashboardPage() {
       <ModalAddProjeto
         aberto={modalAddProjetoAberto}
         onClose={() => setModalAddProjetoAberto(false)}
-        onSalvar={(novoProjeto) => {
-          setProjetos([...projetos, novoProjeto]);
-        }}
       />
 
       <ModalAddFormacao
         aberto={modalAddFormacaoAberto}
         onClose={() => setModalAddFormacaoAberto(false)}
-        onSalvar={(novaFormacao) => {
-          setFormacoes([...formacoes, novaFormacao]);
-        }}
       />
 
       <ModalAddExperiencia
         aberto={modalAddExperienciaAberto}
         onClose={() => setModalAddExperienciaAberto(false)}
-        onSalvar={(novaExp) => {
-          setExperiencias([...experiencias, novaExp]);
-        }}
       />
 
       <ModalEditarPerfil

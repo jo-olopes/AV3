@@ -6,6 +6,7 @@ interface ModalEditarGeralProps {
   aberto: boolean;
   onClose: () => void;
 
+  id: number;
   tipo: "projeto" | "curso" | "experiencia";
 
   titulo: string;
@@ -18,19 +19,11 @@ interface ModalEditarGeralProps {
   certificado?: string | null;
   imagem?: string | null;
 
-  onSalvar: (valores: {
-    titulo: string;
-    descricaoCurta: string;
-    descricaoDetalhada: string;
-    tecnologias?: string;
-    tempo?: string;
-    github?: string;
-    certificado?: string | null;
-    imagem?: string | null;
-  }) => void;
+  onSalvar: (valores: any) => void;
 }
 
 export default function ModalEditarGeral({
+  id,
   aberto,
   onClose,
   tipo,
@@ -47,7 +40,6 @@ export default function ModalEditarGeral({
 
   const [aba, setAba] = useState<"info" | "tecnico" | "arquivos">("info");
 
-  // estados
   const [tituloEdit, setTituloEdit] = useState(titulo);
   const [descCurtaEdit, setDescCurtaEdit] = useState(descricaoCurta);
   const [descDetalhadaEdit, setDescDetalhadaEdit] = useState(descricaoDetalhada);
@@ -62,6 +54,7 @@ export default function ModalEditarGeral({
   function handleImagem(e: any) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = () => setImgEdit(reader.result as string);
     reader.readAsDataURL(file);
@@ -70,6 +63,7 @@ export default function ModalEditarGeral({
   function handleCertificado(e: any) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = () => setCertEdit(reader.result as string);
     reader.readAsDataURL(file);
@@ -85,7 +79,7 @@ export default function ModalEditarGeral({
 
         {/* ABAS */}
         <div className="flex mt-4 mb-4 border-b border-white/20">
-          
+
           <button
             onClick={() => setAba("info")}
             className={`flex-1 py-2 ${aba === "info" ? "border-b-2 border-white font-bold" : "opacity-60"}`}
@@ -111,7 +105,6 @@ export default function ModalEditarGeral({
         {/* CONTEÚDO */}
         <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-1">
 
-          {/* ABA 1 — BÁSICO */}
           {aba === "info" && (
             <>
               <label className="text-sm">
@@ -143,10 +136,8 @@ export default function ModalEditarGeral({
             </>
           )}
 
-          {/* ABA 2 — TÉCNICO */}
           {aba === "tecnico" && (
             <>
-              {/* TECNOLOGIAS — apenas PROJETO */}
               {tipo === "projeto" && (
                 <label className="text-sm">
                   Tecnologias:
@@ -158,7 +149,6 @@ export default function ModalEditarGeral({
                 </label>
               )}
 
-              {/* TEMPO — apenas CURSO e EXPERIÊNCIA */}
               {(tipo === "curso" || tipo === "experiencia") && (
                 <label className="text-sm">
                   Tempo:
@@ -170,7 +160,6 @@ export default function ModalEditarGeral({
                 </label>
               )}
 
-              {/* GITHUB — apenas PROJETO */}
               {tipo === "projeto" && (
                 <label className="text-sm">
                   GitHub:
@@ -184,10 +173,8 @@ export default function ModalEditarGeral({
             </>
           )}
 
-          {/* ABA 3 — ARQUIVOS */}
           {aba === "arquivos" && (
             <>
-              {/* IMAGEM — aparece para todos */}
               <label className="text-sm">
                 Imagem:
                 <input type="file" accept="image/*" className="mt-1" onChange={handleImagem} />
@@ -197,7 +184,6 @@ export default function ModalEditarGeral({
                 <img src={imgEdit} className="w-full h-32 object-cover rounded-xl" />
               )}
 
-              {/* CERTIFICADO — apenas CURSO */}
               {tipo === "curso" && (
                 <label className="text-sm">
                   Certificado:
@@ -213,13 +199,13 @@ export default function ModalEditarGeral({
 
         </div>
 
-        {/* BOTÕES */}
         <button
           onClick={() => {
             onSalvar({
+              id,
               titulo: tituloEdit,
-              descricaoCurta: descCurtaEdit,
-              descricaoDetalhada: descDetalhadaEdit,
+              descricao: descCurtaEdit,             // <-- nome certo para MySQL
+              descricao_detalhada: descDetalhadaEdit,
               tecnologias: tecEdit,
               tempo: tempoEdit,
               github: githubEdit,
@@ -239,7 +225,6 @@ export default function ModalEditarGeral({
         >
           Cancelar
         </button>
-
       </div>
     </div>
   );
